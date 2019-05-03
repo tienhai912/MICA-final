@@ -162,7 +162,7 @@ def gen_vector_data(kinect, codebook_kinect, test_person, knn):
 
     # kinect = kinect of input data
     # codebook_kinect = kinect of codebook
-    prefix_vector_name = kinect + '_to_' + codebook_kinect + '_' + person + '_'
+    prefix_vector_name = kinect + '_to_' + codebook_kinect + '_' + person + '_' + test_person +'_'
 
     logger.info(prefix_vector_name)
     logger.info('temp_X_sum: ' + str(temp_X_sum.shape))
@@ -191,9 +191,9 @@ def run_gen_vector_data(kinects, try_leave_out_people, knn):
   logger.info('Finished run gen vector data')
 
 # Read vector files (output of run_gen_vector_data)
-def read_vector_data(kinect, codebook_kinect, person):
+def read_vector_data(kinect, codebook_kinect, person, test_person):
   save_vector_folder = os.path.join(input_root_folder, code_vector_folder_name)
-  prefix_vector_name = kinect + '_to_' + codebook_kinect + '_' + person + '_'
+  prefix_vector_name = kinect + '_to_' + codebook_kinect + '_' + person + '_' + test_person +'_'
 
   temp_X_sum = read_features_out(os.path.join(save_vector_folder, prefix_vector_name + 'X_sum.txt'))
   temp_X_max = read_features_out(os.path.join(save_vector_folder, prefix_vector_name + 'X_max.txt'))
@@ -221,7 +221,7 @@ def save_data(kinects, try_leave_out_people):
       data['y_test'] = np.empty((0, 1))
 
       for person in people:
-        temp_X_sum, temp_X_max, temp_y = read_vector_data(kinect, kinect, person)
+        temp_X_sum, temp_X_max, temp_y = read_vector_data(kinect, kinect, person, test_person)
         if (person!=test_person):
           data['X_train_sum'] = merge_two_matrices_col_by_col(data['X_train_sum'], temp_X_sum)
           data['X_train_max'] = merge_two_matrices_col_by_col(data['X_train_max'], temp_X_max)
@@ -272,8 +272,8 @@ def predict(test_person, test_kinect, train_kinect):
   y_pred_sum = sum_svc.predict(X_test_sum)
   y_pred_max = max_svc.predict(X_test_max)
 
-  percen_sum = np.sum(1 for i, j in zip(y_pred_sum, y_test) if i != j)/len(y_test)
-  percen_max = np.sum(1 for i, j in zip(y_pred_max, y_test) if i != j)/len(y_test)
+  percen_sum = np.sum(1 for i, j in zip(y_pred_sum, y_test) if i == j)/len(y_test)
+  percen_max = np.sum(1 for i, j in zip(y_pred_max, y_test) if i == j)/len(y_test)
 
   return percen_sum, percen_max
 
@@ -295,14 +295,17 @@ if __name__ == '__main__':
   knn = 5
 
   # kinects = ['Kinect_1', 'Kinect_2', 'Kinect_3', 'Kinect_4', 'Kinect_5']
-  try_leave_out_people = ['Thuy']
+  try_leave_out_people = ['Giang', 'Hai', 'Long', 'Minh', 'Thuy', 'Tuyen']
 
   kinects = ['Kinect_4', 'Kinect_5']
 
+  # Generate vector for each person on each kinect
   # run_gen_vector_data(kinects, try_leave_out_people, knn)
 
+  # Train SVC, save trained SVC and test model
   save_data(kinects, try_leave_out_people)
 
+  # Run test model on trained SVC
   run_predict(kinects, try_leave_out_people)
 
 
