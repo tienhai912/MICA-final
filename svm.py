@@ -294,10 +294,10 @@ if __name__ == '__main__':
   logger.info('Start')
   knn = 5
 
-  # kinects = ['Kinect_1', 'Kinect_2', 'Kinect_3', 'Kinect_4', 'Kinect_5']
+  kinects = ['Kinect_1', 'Kinect_2', 'Kinect_3', 'Kinect_4', 'Kinect_5']
   try_leave_out_people = ['Giang', 'Hai', 'Long', 'Minh', 'Thuy', 'Tuyen']
 
-  kinects = ['Kinect_4', 'Kinect_5']
+  # kinects = ['Kinect_4', 'Kinect_5']
 
   # Generate vector for each person on each kinect
   # run_gen_vector_data(kinects, try_leave_out_people, knn)

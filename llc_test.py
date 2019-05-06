@@ -64,16 +64,17 @@ def load_initial_1024_codebook():
   codebook = np.concatenate((temp, temp, temp, temp[:42]))
   return codebook
 
-def llc(): # LLC_coding_appr.m
+def llc(B,X,knn): # LLC_coding_appr.m
   # B: Mxd
   # X: Nxd
-  B = load_initial_codebook().T
+  # Coeff: NxM
+  ## B = read_features_out(trained_codebook_file)
   # M = 1024
   nbase = B.shape[0]
-  X = load_initial_matrix().T
+  ## X = load_initial_matrix().T
   # N = 5
   nframe = X.shape[0]
-  knn = 5
+  ## knn = 5
   beta = 0.0001
 
   XX = np.sum(np.multiply(X, X), axis=1, keepdims=True)
@@ -100,6 +101,7 @@ def llc(): # LLC_coding_appr.m
     w = w/np.sum(w)
     Coeff[i, idx] = w.T
 
+  # Coeff: NxM
   return Coeff
 
 def LLC_solution():
@@ -153,7 +155,8 @@ def least_square_example():
 
 def train_codebook():
   # In applying our algorithm, the two related
-  # parameters λ and σ in Eq.(4) and Eq.(8) were carefully selected such that the cardinality, i.e. the length of id in line 8
+  # parameters λ and σ in Eq.(4) and Eq.(8) were carefully selected
+  # such that the cardinality, i.e. the length of id in line 8
   # of Alg.4.1, could match the number of neighbors used during classification
   code_lambda = 500
   code_sigma = 100
@@ -161,6 +164,8 @@ def train_codebook():
   M = B.shape[1]
   X = load_initial_matrix()
   N = X.shape[1]
+  print(B.shape)
+  print(X.shape)
   for i in np.arange(N):
     xi = X[:, i]
     # train_codebook_cal_d(X, B, code_sigma, i)
@@ -168,6 +173,7 @@ def train_codebook():
 
     # {locality constraint parameter}
     d = np.exp(L2_axis((xi - B.T).T, 0) / code_sigma)
+    print(d.shape)
 
     # Normalize
     # NOTE: range of d: (epsilon,1]; epsilon = 10^-6
@@ -179,18 +185,26 @@ def train_codebook():
 
     # {coding}
     ci = np.zeros((1, M))
+
     # {remove bias}
-    id = [i for i in np.arange(M) if np.absolute(ci[i, 0]) > 0.01] # or ci[0, i] if ci is row vector
-    Bi = [B[:, i] for i in id]
+    temp_id = [i for i in np.arange(M) if np.absolute(ci[0, i]) > 0.01] # or ci[0, i] if ci is row vector
+    Bi = [B[:, k] for k in temp_id]
 
-    ci2 = 0 #
+    # ci2 = 0 #
+    idx = IDX[i, :]
+    z = B[idx, :] - np.tile(X[i, :], (knn, 1))
+    C = np.dot(z, z.T)
+    C = C + II*beta*np.trace(C)
+    w = np.linalg.solve(C, np.ones((knn, 1)))
+    w = w/np.sum(w)
+    Coeff[i, idx] = w.T
 
-    # {update basis}
-    Bi2 = -2*ci2*(xi - Bi*ci2)
-    muy = np.sqrt(1/i)
-    Bi = Bi - muy*Bi/()
-    print(Bi.shape)
-    print(Bi2.shape)
+    # # {update basis}
+    # Bi2 = -2*ci2*(xi - Bi*ci2)
+    # muy = np.sqrt(1/i)
+    # Bi = Bi - muy*Bi/()
+    # print(Bi.shape)
+    # print(Bi2.shape)
 
 def test():
 
@@ -204,8 +218,8 @@ def test():
 
 if __name__ == '__main__':
   # gen_random_matrix()
-  # test()
+  test()
   # llc()
   # LLC_solution()
-  test_code = read_features_out(trained_codebook_file)
-  print(test_code.shape)
+  # test_code = read_features_out(trained_codebook_file)
+  # print(test_code.shape)

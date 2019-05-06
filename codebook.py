@@ -181,9 +181,9 @@ def gen_origin_codebook(kinects, try_leave_out_people, k_means):
 if __name__ == '__main__':
   logger.info('Start')
 
-  # kinects = ['Kinect_1', 'Kinect_2', 'Kinect_3', 'Kinect_4', 'Kinect_5']
+  kinects = ['Kinect_1', 'Kinect_2', 'Kinect_3', 'Kinect_4', 'Kinect_5']
   try_leave_out_people = ['Giang', 'Hai', 'Long', 'Minh', 'Thuy', 'Tuyen']
-  kinects = ['Kinect_4', 'Kinect_5']
+  # kinects = ['Kinect_4', 'Kinect_5']
 
   k_means = 1024
   # codebook_file = os.path.join(input_root_folder, 'codebook', '5_people_codebook.txt')
