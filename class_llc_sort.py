@@ -21,8 +21,9 @@ class LLC_sort(LLC):
     # num_tra_data = number of trajectories taken to get LLC code, default = 200
     self.num_tra_data = num_tra_data
 
+    # output_codebook_root_folder = root folder of trained codebook
     self.output_codebook_root_folder = '/home/dangmanhtruong95/NTHai/iDT_output/'
-
+    # output_root_folder = root folder of llc data and SVM
     self.output_root_folder = '/home/dangmanhtruong95/NTHai/iDT_output_llc_sort_' + str(num_tra_data) + '/'
 
     # Create output folder if not exist

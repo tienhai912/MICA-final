@@ -22,9 +22,11 @@ class LLC:
     # knn = number of nearest neighbors, use for LLC, default = 5
     self.knn = knn
 
-    # input_root_folder = iDT folder
+    # input_root_folder = root iDT folder
     self.input_root_folder = input_root_folder
+    # output_codebook_root_folder = root folder of trained codebook
     self.output_codebook_root_folder = '/home/dangmanhtruong95/NTHai/iDT_output/'
+    # output_root_folder = root folder of llc data and SVM
     self.output_root_folder = '/home/dangmanhtruong95/NTHai/iDT_output_llc/'
 
     # Create output folder if not exist
@@ -154,6 +156,9 @@ class LLC:
 
     return Coeff
 
+  def calculate_vector(self, B, X):
+    return self.calculate_llc(B, X)
+
   # Get iDT output without first 10 columns (only take trajectories, HOG, HOF, MBH)
   def get_origin_trajectories(self, input_folder):
     support.unzip_file(os.path.join(input_folder, self.output_zip_file), input_folder)
@@ -184,7 +189,7 @@ class LLC:
         input_features_folder = os.path.join(self.input_root_folder, person, kinect, folder)
         feature_vector = self.get_origin_trajectories(input_features_folder)
 
-        code_vector = self.calculate_llc(B, feature_vector)
+        code_vector = self.calculate_vector(B, feature_vector)
         # Sum pooling and max pooling
         code_vector_sum = np.sum(code_vector, axis=0, keepdims=True)
         code_vector_max = np.amax(code_vector, axis=0, keepdims=True)
