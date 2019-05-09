@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from datetime import datetime
 import logging
 import zipfile
@@ -15,6 +16,7 @@ input_root_folder = '/home/dangmanhtruong95/NTHai/iDT_output/'
 code_vector_folder_name = 'code_vector'
 svm_test_data_folder_name = 'svm_test_data'
 train_svm_folder_name = 'trained_svm'
+csv_folder_name = 'csv'
 
 out_feature_file = 'out_features.txt'
 output_zip_file = 'output.zip'
@@ -22,7 +24,7 @@ output_zip_file = 'output.zip'
 for handler in logging.root.handlers[:]:
   logging.root.removeHandler(handler)
 
-logging.basicConfig(filename='svm_20190502.log', level=logging.INFO, format='%(asctime)s %(levelname)-8s %(message)s',datefmt='%Y-%m-%d %H:%M:%S')
+logging.basicConfig(filename='svm_20190507.log', level=logging.INFO, format='%(asctime)s %(levelname)-8s %(message)s',datefmt='%Y-%m-%d %H:%M:%S')
 logger = logging.getLogger('Hai')
 
 def list_all_folders_in_a_directory(directory):
@@ -133,6 +135,8 @@ def gen_vector_data(kinect, codebook_kinect, test_person, knn):
   codebook_file = os.path.join(input_root_folder, 'codebook', codebook_kinect + '_' + test_person + '_codebook.txt')
   B = read_features_out(codebook_file)
 
+  save_vector_folder = os.path.join(input_root_folder, code_vector_folder_name)
+
   for person in people:
     temp_X_sum = np.empty((0, 1024))
     temp_X_max = np.empty((0, 1024))
@@ -158,16 +162,15 @@ def gen_vector_data(kinect, codebook_kinect, test_person, knn):
       temp_X_max = merge_two_matrices_col_by_col(temp_X_max, code_vector_max)
       temp_y = merge_two_matrices_col_by_col(temp_y, label_vector)
 
-    save_vector_folder = os.path.join(input_root_folder, code_vector_folder_name)
 
     # kinect = kinect of input data
     # codebook_kinect = kinect of codebook
     prefix_vector_name = kinect + '_to_' + codebook_kinect + '_' + person + '_' + test_person +'_'
 
     logger.info(prefix_vector_name)
-    logger.info('temp_X_sum: ' + str(temp_X_sum.shape))
-    logger.info('temp_X_max: ' + str(temp_X_max.shape))
-    logger.info('temp_y: ' + str(temp_y.shape))
+    # logger.info('temp_X_sum: ' + str(temp_X_sum.shape))
+    # logger.info('temp_X_max: ' + str(temp_X_max.shape))
+    # logger.info('temp_y: ' + str(temp_y.shape))
 
     save_features_out(temp_X_sum, os.path.join(save_vector_folder, prefix_vector_name + 'X_sum.txt'))
     save_features_out(temp_X_max, os.path.join(save_vector_folder, prefix_vector_name + 'X_max.txt'))
@@ -250,9 +253,9 @@ def save_data(kinects, try_leave_out_people):
       save_test_folder = os.path.join(svm_test_data_folder, kinect + '_to_' + kinect + '_' + test_person)
 
       logger.info(save_test_folder)
-      logger.info('X_test_sum: ' + str(data['X_test_sum'].shape))
-      logger.info('X_test_max: ' + str(data['X_test_max'].shape))
-      logger.info('y_test: ' + str(data['y_test'].shape))
+      # logger.info('X_test_sum: ' + str(data['X_test_sum'].shape))
+      # logger.info('X_test_max: ' + str(data['X_test_max'].shape))
+      # logger.info('y_test: ' + str(data['y_test'].shape))
 
       save_features_out(data['X_test_sum'], os.path.join(save_test_folder, 'X_test_sum.txt'))
       save_features_out(data['X_test_max'], os.path.join(save_test_folder, 'X_test_max.txt'))
@@ -279,14 +282,37 @@ def predict(test_person, test_kinect, train_kinect):
 
 def run_predict(kinects, try_leave_out_people):
   logger.info('Start run predict')
+  sum_result= {}
+  max_result= {}
+  num_of_tries = len(try_leave_out_people)
+
   for test_kinect in kinects:
+    sum_result[test_kinect] = {}
+    max_result[test_kinect] = {}
     for train_kinect in kinects:
+      temp_sum = 0
+      temp_max = 0
+
       for test_person in try_leave_out_people:
         percen_sum, percen_max = predict(test_person, test_kinect, train_kinect)
+        temp_sum = temp_sum + percen_sum
+        temp_max = temp_max + percen_max
         logger.info('')
         logger.info('Test person: ' + test_person + ' of ' + test_kinect + ' on ' + train_kinect)
         logger.info('Sum pooling correct percentage: ' + str(percen_sum))
         logger.info('Max pooling correct percentage: ' + str(percen_max))
+
+
+      sum_result[test_kinect][train_kinect] = temp_sum / num_of_tries
+      max_result[test_kinect][train_kinect] = temp_max / num_of_tries
+
+
+  csv_folder = os.path.join(input_root_folder, csv_folder_name)
+  os.makedirs(os.path.dirname(os.path.join(csv_folder, 'sum_pooling_result.csv')), exist_ok=True)
+  df_sum = pd.DataFrame(sum_result)
+  df_sum.to_csv(os.path.join(csv_folder, 'sum_pooling_result.csv'))
+  df_max = pd.DataFrame(max_result)
+  df_max.to_csv(os.path.join(csv_folder, 'max_pooling_result.csv'))
 
   logger.info('Finished run predict')
 
@@ -303,9 +329,10 @@ if __name__ == '__main__':
   # run_gen_vector_data(kinects, try_leave_out_people, knn)
 
   # Train SVC, save trained SVC and test model
-  save_data(kinects, try_leave_out_people)
+  # save_data(kinects, try_leave_out_people)
 
   # Run test model on trained SVC
   run_predict(kinects, try_leave_out_people)
 
+  logger.info('Finished All')
 
