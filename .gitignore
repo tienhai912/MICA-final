@@ -4,6 +4,7 @@
 /output
 /Table
 /Paper
+/__pycache__
 
 # File
 *.zip
